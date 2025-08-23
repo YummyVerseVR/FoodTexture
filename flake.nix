@@ -1,16 +1,35 @@
 {
-  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    flake-utils.url = "github:numtide/flake-utils";
+  };
 
-  outputs = { self, nixpkgs }:
-    let
-      pkgs = nixpkgs.legacyPackages.x86_64-linux;
-    in
-    {
-      devShells.x86_64-linux.default = pkgs.mkShell {
-        buildInputs = with pkgs; [
-        uv
-        ];
-        LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath (with pkgs; [ ]);
-      };
-    };
+  outputs = { self, nixpkgs, flake-utils }:
+    flake-utils.lib.eachDefaultSystem (system:
+      let
+        pkgs = import nixpkgs {
+          inherit system;
+          config.allowUnfree = true;
+          config.allowUnsupportedSystem = true;
+          config.cudaSupport = true;
+        };
+      in
+      {
+        devShells.default = pkgs.mkShell {
+          packages = with pkgs; [
+            ffmpeg
+            cudaPackages.cudatoolkit
+            uv
+          ];
+          buildInputs = with pkgs; [
+          ];
+
+          LD_LIBRARY_PATH = "${pkgs.cudaPackages.cudatoolkit}/lib:$LD_LIBRARY_PATH";
+          shellHook = ''
+            export XLA_FLAGS=--xla_gpu_cuda_data_dir=${pkgs.cudaPackages.cudatoolkit}
+          '';
+        };
+      }
+    );
 }
+
