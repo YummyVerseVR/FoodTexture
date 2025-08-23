@@ -4,7 +4,7 @@ from torch.utils.data import DataLoader
 
 from cGAN import PreprocessedFoodSoundDataset, Generator, Discriminator, LATENT_DIM
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda")
 print(f"Using device: {device}")
 
 PROCESSED_DATA_DIR = "dataset/"
