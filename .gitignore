@@ -6,5 +6,9 @@ dist/
 wheels/
 *.egg-info
 
+.direnv/
+audio/
+w2v/
+
 # Virtual environments
 .venv
