@@ -49,7 +49,7 @@ def setup():
 
 def save_checkpoint(checkpoint_data, checkpoint_folder):
     now = datetime.datetime.now()
-    now = now.strftime("%Y:%M:%d-%H:%M:%S")
+    now = now.strftime("%Y:%m:%d-%H:%M:%S")
     torch.save(checkpoint_data, f"{checkpoint_folder}/latest.pth")
     torch.save(checkpoint_data, f"{checkpoint_folder}/{now}.pth")
 
@@ -78,7 +78,7 @@ def run(
     else:
         print("No checkpoint found. Starting training from scratch.")
 
-    num_epochs = 1000
+    num_epochs = 5000
     d_loss_list = []
     g_loss_list = []
 
@@ -163,7 +163,7 @@ def run(
 def save_model(generator, discriminator):
     # Save models
     now = datetime.datetime.now()
-    now = now.strftime("%Y:%M:%d-%H:%M:%S")
+    now = now.strftime("%Y:%m:%d-%H:%M:%S")
     torch.save(generator.state_dict(), "models/generator/latest.pth")
     torch.save(generator.state_dict(), f"models/generator/{now}.pth")
     torch.save(discriminator.state_dict(), "models/discriminator/latest.pth")
