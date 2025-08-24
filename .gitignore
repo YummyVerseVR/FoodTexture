@@ -9,6 +9,7 @@ wheels/
 .direnv/
 audio/
 w2v/
+generated_images/
 
 # Virtual environments
 .venv
