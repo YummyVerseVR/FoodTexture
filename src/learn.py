@@ -1,8 +1,15 @@
+import random
+import numpy
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 
 from cGAN import PreprocessedFoodSoundDataset, Generator, Discriminator, LATENT_DIM
+
+seed = 0
+random.seed(seed)
+numpy.random.seed(seed)
+torch.manual_seed(seed)
 
 device = torch.device("cuda")
 print(f"Using device: {device}")

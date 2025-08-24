@@ -19,6 +19,7 @@
           packages = with pkgs; [
             ffmpeg
             cudaPackages.cudatoolkit
+            nvidia-docker
             uv
           ];
           buildInputs = with pkgs; [
