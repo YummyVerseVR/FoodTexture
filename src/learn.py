@@ -23,9 +23,9 @@ dataloader = DataLoader(dataset, batch_size=16, shuffle=True, num_workers=4)
 generator = Generator().to(device)
 discriminator = Discriminator().to(device)
 criterion = nn.BCELoss()
-optimizer_g = torch.optim.Adam(generator.parameters(), lr=0.0002, betas=(0.5, 0.999))
+optimizer_g = torch.optim.Adam(generator.parameters(), lr=0.0002, betas=(0.9, 0.999))
 optimizer_d = torch.optim.Adam(
-    discriminator.parameters(), lr=0.0002, betas=(0.5, 0.999)
+    discriminator.parameters(), lr=0.0001, betas=(0.9, 0.999)
 )
 
 num_epochs = 100
@@ -67,6 +67,11 @@ for epoch in range(num_epochs):
 
         g_loss.backward()
         optimizer_g.step()
+
+        if (i + 1) % 50 == 0:
+            print(
+                f"  Batch [{i + 1}/{len(dataloader)}], D Loss: {d_loss.item():.4f}, G Loss: {g_loss.item():.4f}"
+            )
 
     print(
         f"Epoch [{epoch + 1}/{num_epochs}], D Loss: {d_loss.item():.4f}, G Loss: {g_loss.item():.4f}"
