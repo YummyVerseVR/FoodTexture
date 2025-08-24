@@ -2,6 +2,7 @@ import random
 import numpy
 import torch
 import torch.nn as nn
+from torchvision.utils import save_image
 from torch.utils.data import DataLoader
 
 from cGAN import PreprocessedFoodSoundDataset, Generator, Discriminator, LATENT_DIM
@@ -76,6 +77,16 @@ for epoch in range(num_epochs):
     print(
         f"Epoch [{epoch + 1}/{num_epochs}], D Loss: {d_loss.item():.4f}, G Loss: {g_loss.item():.4f}"
     )
+
+    if (epoch + 1) % 5 == 0:  # Save every 5 epochs
+        with torch.no_grad():
+            # Use a fixed noise vector to see how the output for that specific noise evolves
+            fixed_noise = torch.randn(16, LATENT_DIM).to(device)
+            fixed_word_vecs = ...  # Get some sample word vectors
+            fake_images = generator(fixed_noise, fixed_word_vecs).detach().cpu()
+            # Normalize to [0, 1] range for saving as an image
+            fake_images = (fake_images + 1) / 2
+            save_image(fake_images, f"generated_image_epoch_{epoch + 1}.png", nrow=4)
 
 # Save models
 torch.save(generator.state_dict(), "generator.pth")
