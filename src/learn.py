@@ -54,6 +54,38 @@ def save_checkpoint(checkpoint_data, checkpoint_folder):
     torch.save(checkpoint_data, f"{checkpoint_folder}/{now}.pth")
 
 
+def cleanup_checkpoints(checkpoint_folder, max_checkpoints=5):
+    checkpoints = [
+        f
+        for f in os.listdir(checkpoint_folder)
+        if os.path.isfile(os.path.join(checkpoint_folder, f)) and f.endswith(".pth")
+    ]
+    checkpoints.remove("latest.pth")  # Keep the latest checkpoint
+
+    if len(checkpoints) > max_checkpoints:
+        checkpoints.sort(
+            key=lambda x: os.path.getmtime(os.path.join(checkpoint_folder, x))
+        )
+        for ckpt in checkpoints[:-max_checkpoints]:
+            os.remove(os.path.join(checkpoint_folder, ckpt))
+            print(f"Removed old checkpoint: {ckpt}")
+
+
+def cleanup_models(model_folder, max_models=5):
+    models = [
+        f
+        for f in os.listdir(model_folder)
+        if os.path.isfile(os.path.join(model_folder, f)) and f.endswith(".pth")
+    ]
+    models.remove("latest.pth")  # Keep the latest model
+
+    if len(models) > max_models:
+        models.sort(key=lambda x: os.path.getmtime(os.path.join(model_folder, x)))
+        for mdl in models[:-max_models]:
+            os.remove(os.path.join(model_folder, mdl))
+            print(f"Removed old model: {mdl}")
+
+
 def run(
     device, dataloader, generator, discriminator, optimizer_d, optimizer_g, criterion
 ) -> None:
@@ -154,6 +186,7 @@ def run(
                     "d_loss": d_loss,
                 }
                 save_checkpoint(checkpoint, CHECKPOINT_FOLDER)
+                cleanup_checkpoints(CHECKPOINT_FOLDER, max_checkpoints=5)
         except KeyboardInterrupt:
             return generator, discriminator, d_loss_list, g_loss_list
 
@@ -168,6 +201,8 @@ def save_model(generator, discriminator):
     torch.save(generator.state_dict(), f"models/generator/{now}.pth")
     torch.save(discriminator.state_dict(), "models/discriminator/latest.pth")
     torch.save(discriminator.state_dict(), f"models/discriminator/{now}.pth")
+    cleanup_models("models/generator", max_models=5)
+    cleanup_models("models/discriminator", max_models=5)
     print("Models saved.")
 
 
