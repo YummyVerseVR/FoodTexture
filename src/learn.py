@@ -2,7 +2,8 @@ import random
 import numpy
 import torch
 import torch.nn as nn
-from torchvision.utils import save_image
+
+# from torchvision.utils import save_image
 from torch.utils.data import DataLoader
 
 from cGAN import PreprocessedFoodSoundDataset, Generator, Discriminator, LATENT_DIM
@@ -20,14 +21,16 @@ if __name__ == "__main__":
     # Use the modified Dataset class
     dataset = PreprocessedFoodSoundDataset(PROCESSED_DATA_DIR)
     # Increase num_workers for faster data loading
-    dataloader = DataLoader(dataset, batch_size=16, shuffle=True, num_workers=4)
+    dataloader = DataLoader(dataset, batch_size=32, shuffle=True, num_workers=4)
 
     generator = Generator().to(device)
     discriminator = Discriminator().to(device)
     criterion = nn.BCELoss()
-    optimizer_g = torch.optim.Adam(generator.parameters(), lr=0.002, betas=(0.9, 0.999))
+    optimizer_g = torch.optim.Adam(
+        generator.parameters(), lr=0.0002, betas=(0.5, 0.999)
+    )
     optimizer_d = torch.optim.Adam(
-        discriminator.parameters(), lr=0.000001, betas=(0.5, 0.999)
+        discriminator.parameters(), lr=0.0001, betas=(0.5, 0.999)
     )
 
     num_epochs = 100
@@ -39,7 +42,7 @@ if __name__ == "__main__":
             batch_size = real_specs.size(0)
 
             # lebels: true=1, fake=0
-            real_labels = torch.ones(batch_size, 1).to(device)
+            real_labels = torch.ones(batch_size, 1).to(device) * 0.98
             fake_labels = torch.zeros(batch_size, 1).to(device)
 
             # learn discriminator
@@ -79,17 +82,17 @@ if __name__ == "__main__":
             f"Epoch [{epoch + 1}/{num_epochs}], D Loss: {d_loss.item():.4f}, G Loss: {g_loss.item():.4f}"
         )
 
-        if (epoch + 1) % 5 == 0:  # Save every 5 epochs
-            with torch.no_grad():
-                # Use a fixed noise vector to see how the output for that specific noise evolves
-                fixed_noise = torch.randn(16, LATENT_DIM).to(device)
-                fixed_word_vecs = ...  # Get some sample word vectors
-                fake_images = generator(fixed_noise, fixed_word_vecs).detach().cpu()
-                # Normalize to [0, 1] range for saving as an image
-                fake_images = (fake_images + 1) / 2
-                save_image(
-                    fake_images, f"generated_image_epoch_{epoch + 1}.png", nrow=4
-                )
+        # if (epoch + 1) % 5 == 0:  # Save every 5 epochs
+        #     with torch.no_grad():
+        #         # Use a fixed noise vector to see how the output for that specific noise evolves
+        #         fixed_noise = torch.randn(16, LATENT_DIM).to(device)
+        #         fixed_word_vecs = ...  # Get some sample word vectors
+        #         fake_images = generator(fixed_noise, fixed_word_vecs).detach().cpu()
+        #         # Normalize to [0, 1] range for saving as an image
+        #         fake_images = (fake_images + 1) / 2
+        #         save_image(
+        #             fake_images, f"generated_image_epoch_{epoch + 1}.png", nrow=4
+        #         )
 
     # Save models
     torch.save(generator.state_dict(), "generator.pth")
