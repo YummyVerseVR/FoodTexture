@@ -3,8 +3,8 @@ import random
 import numpy
 import torch
 import torch.nn as nn
+import datetime
 
-from tqdm import tqdm
 from torch.utils.data import DataLoader
 from cGAN import PreprocessedFoodSoundDataset, Generator, Discriminator, LATENT_DIM
 
@@ -47,16 +47,24 @@ def setup():
     )
 
 
+def save_checkpoint(checkpoint_data, checkpoint_folder):
+    now = datetime.datetime.now()
+    now = now.strftime("%Y:%M:%d-%H:%M:%S")
+    torch.save(checkpoint_data, f"{checkpoint_folder}/latest.pth")
+    torch.save(checkpoint_data, f"{checkpoint_folder}/{now}.pth")
+
+
 def run(
     device, dataloader, generator, discriminator, optimizer_d, optimizer_g, criterion
 ) -> None:
     # --- 4. Load Checkpoint if it exists ---
     start_epoch = 0
-    CHECKPOINT_PATH = "checkpoint.pth"
+    CHECKPOINT_FOLDER = "models/checkpoints/"
+    LATEST = f"{CHECKPOINT_FOLDER}/latest.pth"
 
-    if os.path.exists(CHECKPOINT_PATH):
-        print(f"Checkpoint found at {CHECKPOINT_PATH}. Resuming training.")
-        checkpoint = torch.load(CHECKPOINT_PATH)
+    if os.path.exists(LATEST):
+        print(f"Checkpoint found at {LATEST}. Resuming training.")
+        checkpoint = torch.load(LATEST)
 
         generator.load_state_dict(checkpoint["generator_state_dict"])
         discriminator.load_state_dict(checkpoint["discriminator_state_dict"])
@@ -70,73 +78,73 @@ def run(
     else:
         print("No checkpoint found. Starting training from scratch.")
 
-    num_epochs = 500
+    num_epochs = 1000
     d_loss_list = []
     g_loss_list = []
 
     for epoch in range(num_epochs):
-        dl = 0
-        d_loss_sum = 0.0
-        g_loss_sum = 0.0
-        # for i, (real_specs, word_vecs) in tqdm(enumerate(dataloader), desc="Batch"):
-        for i, (real_specs, word_vecs) in enumerate(dataloader):
-            real_specs = real_specs.to(device)
-            word_vecs = word_vecs.to(device)
-            batch_size = real_specs.size(0)
+        try:
+            dl = 0
+            d_loss_sum = 0.0
+            g_loss_sum = 0.0
+            # for i, (real_specs, word_vecs) in tqdm(enumerate(dataloader), desc="Batch"):
+            for i, (real_specs, word_vecs) in enumerate(dataloader):
+                real_specs = real_specs.to(device)
+                word_vecs = word_vecs.to(device)
+                batch_size = real_specs.size(0)
 
-            # lebels: true=1, fake=0
-            real_labels = torch.ones(batch_size, 1).to(device)  # * 0.98
-            fake_labels = torch.zeros(batch_size, 1).to(device)
+                # lebels: true=1, fake=0
+                real_labels = torch.ones(batch_size, 1).to(device)  # * 0.98
+                fake_labels = torch.zeros(batch_size, 1).to(device)
 
-            # learn discriminator
-            optimizer_d.zero_grad()
+                # learn discriminator
+                optimizer_d.zero_grad()
 
-            # 1. Learn with real spectrograms
-            outputs = discriminator(real_specs.unsqueeze(1), word_vecs)
-            d_loss_real = criterion(outputs, real_labels)
+                # 1. Learn with real spectrograms
+                outputs = discriminator(real_specs.unsqueeze(1), word_vecs)
+                d_loss_real = criterion(outputs, real_labels)
 
-            # 2. Learn with fake spectrograms
-            noise = torch.randn(batch_size, LATENT_DIM).to(device)
-            fake_specs = generator(noise, word_vecs)
-            outputs = discriminator(
-                fake_specs.detach(), word_vecs
-            )  # detach to avoid training G on these labels
-            d_loss_fake = criterion(outputs, fake_labels)
+                # 2. Learn with fake spectrograms
+                noise = torch.randn(batch_size, LATENT_DIM).to(device)
+                fake_specs = generator(noise, word_vecs)
+                outputs = discriminator(
+                    fake_specs.detach(), word_vecs
+                )  # detach to avoid training G on these labels
+                d_loss_fake = criterion(outputs, fake_labels)
 
-            d_loss = d_loss_real + d_loss_fake
-            d_loss.backward()
-            optimizer_d.step()
+                d_loss = d_loss_real + d_loss_fake
+                d_loss.backward()
+                optimizer_d.step()
 
-            # learn generator
-            optimizer_g.zero_grad()
+                # learn generator
+                optimizer_g.zero_grad()
 
-            outputs = discriminator(fake_specs, word_vecs)
-            g_loss = criterion(outputs, real_labels)
+                outputs = discriminator(fake_specs, word_vecs)
+                g_loss = criterion(outputs, real_labels)
 
-            g_loss.backward()
-            optimizer_g.step()
+                g_loss.backward()
+                optimizer_g.step()
 
-            d_loss_sum += d_loss.item()
-            g_loss_sum += g_loss.item()
+                d_loss_sum += d_loss.item()
+                g_loss_sum += g_loss.item()
 
-            # if (i + 1) % 50 == 0:
-            #     print(
-            #         f"  Batch [{i + 1}/{len(dataloader)}], D Loss: {d_loss_sum / (i + 1):.4f}, G Loss: {g_loss_sum / (i + 1):.4f}"
-            #     )
-            dl += 1
+                # if (i + 1) % 50 == 0:
+                #     print(
+                #         f"  Batch [{i + 1}/{len(dataloader)}], D Loss: {d_loss_sum / (i + 1):.4f}, G Loss: {g_loss_sum / (i + 1):.4f}"
+                #     )
+                dl += 1
 
-        print(
-            f"Epoch [{epoch + 1}/{num_epochs}], D Loss: {d_loss_sum / dl:.4f}, G Loss: {g_loss_sum / dl:.4f}"
-        )
+            print(
+                f"Epoch [{epoch + 1}/{num_epochs}], D Loss: {d_loss_sum / dl:.4f}, G Loss: {g_loss_sum / dl:.4f}"
+            )
 
-        d_loss_list.append(d_loss_sum / dl)
-        g_loss_list.append(g_loss_sum / dl)
+            d_loss_list.append(d_loss_sum / dl)
+            g_loss_list.append(g_loss_sum / dl)
 
-        # --- 6. Save Checkpoint periodically ---
-        if (epoch + 1) % 10 == 0:  # Save every 10 epochs
-            print(f"Saving checkpoint at epoch {epoch + 1}...")
-            torch.save(
-                {
+            # --- 6. Save Checkpoint periodically ---
+            if (epoch + 1) % 10 == 0:  # Save every 10 epochs
+                print(f"Saving checkpoint at epoch {epoch + 1}...")
+                checkpoint = {
                     "epoch": epoch,
                     "generator_state_dict": generator.state_dict(),
                     "discriminator_state_dict": discriminator.state_dict(),
@@ -144,15 +152,26 @@ def run(
                     "optimizer_d_state_dict": optimizer_d.state_dict(),
                     "g_loss": g_loss,
                     "d_loss": d_loss,
-                },
-                CHECKPOINT_PATH,
-            )
+                }
+                save_checkpoint(checkpoint, CHECKPOINT_FOLDER)
+        except KeyboardInterrupt:
+            return generator, discriminator, d_loss_list, g_loss_list
 
+    return generator, discriminator, d_loss_list, g_loss_list
+
+
+def save_model(generator, discriminator):
     # Save models
-    torch.save(generator.state_dict(), "generator.pth")
-    torch.save(discriminator.state_dict(), "discriminator.pth")
+    now = datetime.datetime.now()
+    now = now.strftime("%Y:%M:%d-%H:%M:%S")
+    torch.save(generator.state_dict(), "models/generator/latest.pth")
+    torch.save(generator.state_dict(), f"models/generator/{now}.pth")
+    torch.save(discriminator.state_dict(), "models/discriminator/latest.pth")
+    torch.save(discriminator.state_dict(), f"models/discriminator/{now}.pth")
     print("Models saved.")
 
+
+def save_plot(d_loss_list, g_loss_list):
     plt.plot(d_loss_list)
     plt.plot(g_loss_list)
     plt.savefig("loss.png")
@@ -169,7 +188,7 @@ if __name__ == "__main__":
         optimizer_d,
     ) = setup()
     try:
-        run(
+        generator, discriminator, d_loss_list, g_loss_list = run(
             device,
             dataloader,
             generator,
@@ -181,8 +200,10 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         ans = input("Save model?(y/n)")
         if ans == "y":
-            torch.save(generator.state_dict(), "generator.pth")
-            torch.save(discriminator.state_dict(), "discriminator.pth")
-            print("Models saved.")
+            save_model(generator, discriminator)
+            save_plot(d_loss_list, g_loss_list)
         else:
             pass
+
+    save_model(generator, discriminator)
+    save_plot(d_loss_list, g_loss_list)

@@ -12,7 +12,7 @@ from learn import LATENT_DIM
 
 # --- Configuration ---
 # Path to your saved Generator model file
-GENERATOR_MODEL_PATH = "./generator.pth"  # CHANGE THIS to your model file
+GENERATOR_MODEL_PATH = "./models/generator/latest.pth"  # CHANGE THIS to your model file
 # Directory to save the output images
 OUTPUT_DIR = "./generated_images"
 # List of words to generate images for

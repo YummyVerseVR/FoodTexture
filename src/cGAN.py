@@ -44,15 +44,18 @@ class Generator(nn.Module):
             nn.BatchNorm2d(512),
             nn.ReLU(True),
             # State: [batch, 512, 5, 4]
-            nn.ConvTranspose2d(512, 256, kernel_size=4, stride=2, padding=1),
+            nn.Upsample(scale_factor=2, mode="nearest"),
+            nn.Conv2d(512, 256, kernel_size=3, stride=1, padding=1),
             nn.BatchNorm2d(256),
             nn.ReLU(True),
             # State: [batch, 256, 10, 8]
-            nn.ConvTranspose2d(256, 128, kernel_size=4, stride=2, padding=1),
+            nn.Upsample(scale_factor=2, mode="nearest"),
+            nn.Conv2d(256, 128, kernel_size=3, stride=1, padding=1),
             nn.BatchNorm2d(128),
             nn.ReLU(True),
             # State: [batch, 128, 20, 16]
-            nn.ConvTranspose2d(128, 64, kernel_size=4, stride=2, padding=1),
+            nn.Upsample(scale_factor=2, mode="nearest"),
+            nn.Conv2d(128, 64, kernel_size=3, stride=1, padding=1),
             nn.BatchNorm2d(64),
             nn.ReLU(True),
             # State: [batch, 64, 40, 32]
