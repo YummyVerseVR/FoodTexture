@@ -12,3 +12,5 @@ w2v/
 
 # Virtual environments
 .venv
+
+*.pth
