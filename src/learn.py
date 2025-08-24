@@ -1,3 +1,4 @@
+import os
 import random
 import numpy
 import torch
@@ -29,6 +30,25 @@ if __name__ == "__main__":
     optimizer_d = torch.optim.Adam(
         discriminator.parameters(), lr=0.000001, betas=(0.5, 0.999)
     )
+    # --- 4. Load Checkpoint if it exists ---
+    start_epoch = 0
+    CHECKPOINT_PATH = "checkpoint.pth"
+
+    if os.path.exists(CHECKPOINT_PATH):
+        print(f"Checkpoint found at {CHECKPOINT_PATH}. Resuming training.")
+        checkpoint = torch.load(CHECKPOINT_PATH)
+
+        generator.load_state_dict(checkpoint["generator_state_dict"])
+        discriminator.load_state_dict(checkpoint["discriminator_state_dict"])
+
+        optimizer_g.load_state_dict(checkpoint["optimizer_g_state_dict"])
+        optimizer_d.load_state_dict(checkpoint["optimizer_d_state_dict"])
+
+        start_epoch = checkpoint["epoch"] + 1
+
+        print(f"Resuming from epoch {start_epoch}")
+    else:
+        print("No checkpoint found. Starting training from scratch.")
 
     num_epochs = 100
 
@@ -79,17 +99,21 @@ if __name__ == "__main__":
             f"Epoch [{epoch + 1}/{num_epochs}], D Loss: {d_loss.item():.4f}, G Loss: {g_loss.item():.4f}"
         )
 
-        if (epoch + 1) % 5 == 0:  # Save every 5 epochs
-            with torch.no_grad():
-                # Use a fixed noise vector to see how the output for that specific noise evolves
-                fixed_noise = torch.randn(16, LATENT_DIM).to(device)
-                fixed_word_vecs = ...  # Get some sample word vectors
-                fake_images = generator(fixed_noise, fixed_word_vecs).detach().cpu()
-                # Normalize to [0, 1] range for saving as an image
-                fake_images = (fake_images + 1) / 2
-                save_image(
-                    fake_images, f"generated_image_epoch_{epoch + 1}.png", nrow=4
-                )
+        # --- 6. Save Checkpoint periodically ---
+        if (epoch + 1) % 10 == 0:  # Save every 10 epochs
+            print(f"Saving checkpoint at epoch {epoch + 1}...")
+            torch.save(
+                {
+                    "epoch": epoch,
+                    "generator_state_dict": generator.state_dict(),
+                    "discriminator_state_dict": discriminator.state_dict(),
+                    "optimizer_g_state_dict": optimizer_g.state_dict(),
+                    "optimizer_d_state_dict": optimizer_d.state_dict(),
+                    "g_loss": g_loss,
+                    "d_loss": d_loss,
+                },
+                CHECKPOINT_PATH,
+            )
 
     # Save models
     torch.save(generator.state_dict(), "generator.pth")
