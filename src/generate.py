@@ -16,7 +16,16 @@ GENERATOR_MODEL_PATH = "./generator.pth"  # CHANGE THIS to your model file
 # Directory to save the output images
 OUTPUT_DIR = "./generated_images"
 # List of words to generate images for
-INPUT_WORDS = ["cookie", "apple", "chips", "water", "cracker", "lettuce", "bacon"]
+INPUT_WORDS = [
+    "cookie",
+    "apple",
+    "chips",
+    "water",
+    "cracker",
+    "lettuce",
+    "bacon",
+    "aloe",
+]
 # Number of images to generate per word
 NUM_IMAGES_PER_WORD = 4
 

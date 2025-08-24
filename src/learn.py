@@ -4,11 +4,14 @@ import numpy
 import torch
 import torch.nn as nn
 
+from tqdm import tqdm
 from torch.utils.data import DataLoader
-
 from cGAN import PreprocessedFoodSoundDataset, Generator, Discriminator, LATENT_DIM
 
-if __name__ == "__main__":
+import matplotlib.pyplot as plt
+
+
+def setup():
     seed = 0
     random.seed(seed)
     numpy.random.seed(seed)
@@ -21,17 +24,32 @@ if __name__ == "__main__":
     # Use the modified Dataset class
     dataset = PreprocessedFoodSoundDataset(PROCESSED_DATA_DIR)
     # Increase num_workers for faster data loading
-    dataloader = DataLoader(dataset, batch_size=32, shuffle=True, num_workers=4)
+    dataloader = DataLoader(dataset, batch_size=64, shuffle=True, num_workers=4)
 
     generator = Generator().to(device)
     discriminator = Discriminator().to(device)
     criterion = nn.BCELoss()
     optimizer_g = torch.optim.Adam(
-        generator.parameters(), lr=0.0002, betas=(0.5, 0.999)
+        generator.parameters(), lr=0.00002, betas=(0.8, 0.999)
     )
     optimizer_d = torch.optim.Adam(
-        discriminator.parameters(), lr=0.0001, betas=(0.5, 0.999)
+        discriminator.parameters(), lr=0.00001, betas=(0.8, 0.999)
     )
+
+    return (
+        device,
+        dataloader,
+        generator,
+        discriminator,
+        criterion,
+        optimizer_g,
+        optimizer_d,
+    )
+
+
+def run(
+    device, dataloader, generator, discriminator, optimizer_d, optimizer_g, criterion
+) -> None:
     # --- 4. Load Checkpoint if it exists ---
     start_epoch = 0
     CHECKPOINT_PATH = "checkpoint.pth"
@@ -52,16 +70,22 @@ if __name__ == "__main__":
     else:
         print("No checkpoint found. Starting training from scratch.")
 
-    num_epochs = 100
+    num_epochs = 500
+    d_loss_list = []
+    g_loss_list = []
 
     for epoch in range(num_epochs):
+        dl = 0
+        d_loss_sum = 0.0
+        g_loss_sum = 0.0
+        # for i, (real_specs, word_vecs) in tqdm(enumerate(dataloader), desc="Batch"):
         for i, (real_specs, word_vecs) in enumerate(dataloader):
             real_specs = real_specs.to(device)
             word_vecs = word_vecs.to(device)
             batch_size = real_specs.size(0)
 
             # lebels: true=1, fake=0
-            real_labels = torch.ones(batch_size, 1).to(device) * 0.98
+            real_labels = torch.ones(batch_size, 1).to(device)  # * 0.98
             fake_labels = torch.zeros(batch_size, 1).to(device)
 
             # learn discriminator
@@ -92,14 +116,21 @@ if __name__ == "__main__":
             g_loss.backward()
             optimizer_g.step()
 
-            if (i + 1) % 50 == 0:
-                print(
-                    f"  Batch [{i + 1}/{len(dataloader)}], D Loss: {d_loss.item():.4f}, G Loss: {g_loss.item():.4f}"
-                )
+            d_loss_sum += d_loss.item()
+            g_loss_sum += g_loss.item()
+
+            # if (i + 1) % 50 == 0:
+            #     print(
+            #         f"  Batch [{i + 1}/{len(dataloader)}], D Loss: {d_loss_sum / (i + 1):.4f}, G Loss: {g_loss_sum / (i + 1):.4f}"
+            #     )
+            dl += 1
 
         print(
-            f"Epoch [{epoch + 1}/{num_epochs}], D Loss: {d_loss.item():.4f}, G Loss: {g_loss.item():.4f}"
+            f"Epoch [{epoch + 1}/{num_epochs}], D Loss: {d_loss_sum / dl:.4f}, G Loss: {g_loss_sum / dl:.4f}"
         )
+
+        d_loss_list.append(d_loss_sum / dl)
+        g_loss_list.append(g_loss_sum / dl)
 
         # --- 6. Save Checkpoint periodically ---
         if (epoch + 1) % 10 == 0:  # Save every 10 epochs
@@ -121,3 +152,37 @@ if __name__ == "__main__":
     torch.save(generator.state_dict(), "generator.pth")
     torch.save(discriminator.state_dict(), "discriminator.pth")
     print("Models saved.")
+
+    plt.plot(d_loss_list)
+    plt.plot(g_loss_list)
+    plt.savefig("loss.png")
+
+
+if __name__ == "__main__":
+    (
+        device,
+        dataloader,
+        generator,
+        discriminator,
+        criterion,
+        optimizer_g,
+        optimizer_d,
+    ) = setup()
+    try:
+        run(
+            device,
+            dataloader,
+            generator,
+            discriminator,
+            optimizer_d,
+            optimizer_g,
+            criterion,
+        )
+    except KeyboardInterrupt:
+        ans = input("Save model?(y/n)")
+        if ans == "y":
+            torch.save(generator.state_dict(), "generator.pth")
+            torch.save(discriminator.state_dict(), "discriminator.pth")
+            print("Models saved.")
+        else:
+            pass

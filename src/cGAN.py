@@ -27,7 +27,10 @@ class PreprocessedFoodSoundDataset(Dataset):
         Simply loads a .pt file and returns the data from the dictionary inside.
         """
         data_pair = torch.load(self.file_paths[idx])
-        return data_pair["spectrogram"], data_pair["word_vector"]
+        sp, v = data_pair["spectrogram"], data_pair["word_vector"]
+        max, min = sp.max(), sp.min()
+        norm = 2 * (sp - min) / (max - min) - 1
+        return torch.Tensor(norm), v
 
 
 class Generator(nn.Module):
