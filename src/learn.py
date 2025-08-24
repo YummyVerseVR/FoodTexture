@@ -142,7 +142,7 @@ def run(
             g_loss_list.append(g_loss_sum / dl)
 
             # --- 6. Save Checkpoint periodically ---
-            if (epoch + 1) % 10 == 0:  # Save every 10 epochs
+            if (epoch + 1) % 100 == 0:  # Save every 100 epochs
                 print(f"Saving checkpoint at epoch {epoch + 1}...")
                 checkpoint = {
                     "epoch": epoch,
