@@ -9,7 +9,7 @@ import numpy as np
 # --- Configuration ---
 INPUT_DIR = "./audio/"
 OUTPUT_DIR = "./augmented_audio/"
-AUGMENTATIONS_PER_FILE = 5
+AUGMENTATIONS_PER_FILE = 3
 
 
 def augment_data():
@@ -25,9 +25,9 @@ def augment_data():
     # Define the augmentation pipeline
     augment_pipeline = Compose(
         [
-            AddGaussianNoise(min_amplitude=0.001, max_amplitude=0.015, p=0.5),
+            # AddGaussianNoise(min_amplitude=0.001, max_amplitude=0.015, p=0.5),
             TimeStretch(min_rate=0.8, max_rate=1.25, p=0.5),
-            PitchShift(min_semitones=-4, max_semitones=4, p=0.5),
+            # PitchShift(min_semitones=-4, max_semitones=4, p=0.5),
             Shift(min_shift=-0.5, max_shift=0.5, p=0.5),
         ]
     )
