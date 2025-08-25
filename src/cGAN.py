@@ -28,8 +28,14 @@ class PreprocessedFoodSoundDataset(Dataset):
         """
         data_pair = torch.load(self.file_paths[idx])
         sp, v = data_pair["spectrogram"], data_pair["word_vector"]
-        max, min = sp.max(), sp.min()
-        norm = 2 * (sp - min) / (max - min) - 1
+        sp = torch.as_tensor(sp, dtype=torch.float32)  # ensure float32
+        sp_max = sp.max()
+        sp_min = sp.min()
+        rng = (sp_max - sp_min).clamp_min(1e-8)  # avoid div-by-zero
+        norm = 2.0 * (sp - sp_min) / rng - 1.0  # -> [-1, 1]
+        norm = torch.nan_to_num(norm, nan=0.0, posinf=1.0, neginf=-1.0)
+
+        v = torch.as_tensor(v, dtype=torch.float32)
         return torch.Tensor(norm), v
 
 
