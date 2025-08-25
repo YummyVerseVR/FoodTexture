@@ -82,6 +82,13 @@ def cleanup_models(model_folder, max_models=5):
             print(f"Removed old model: {mdl}")
 
 
+def add_instance_noise(x, sigma=0.05):
+    if sigma <= 0:
+        return x
+    n = torch.randn_like(x) * sigma
+    return torch.clamp(x + n, -1.0, 1.0)
+
+
 def run(
     device, dataloader, generator, discriminator, optimizer_d, optimizer_g, criterion
 ) -> None:
@@ -130,20 +137,36 @@ def run(
                 optimizer_d.zero_grad()
 
                 # 1. Learn with real spectrograms
-                outputs = discriminator(real_specs.unsqueeze(1), word_vecs)
+                outputs = discriminator(
+                    add_instance_noise(real_specs.unsqueeze(1)), word_vecs
+                )
                 d_loss_real = criterion(outputs, real_labels)
 
                 # 2. Learn with fake spectrograms
                 noise = torch.randn(batch_size, LATENT_DIM).to(device)
                 fake_specs = generator(noise, word_vecs)
+                # detach to avoid training G on these labels
                 outputs = discriminator(
-                    fake_specs.detach(), word_vecs
-                )  # detach to avoid training G on these labels
+                    add_instance_noise(fake_specs.detach()), word_vecs
+                )
                 d_loss_fake = criterion(outputs, fake_labels)
 
                 d_loss = d_loss_real + d_loss_fake
                 d_loss.backward()
                 optimizer_d.step()
+
+                # Adpative training for generator
+                if d_loss.item() < 0.1:
+                    optimizer_g.zero_grad()
+                    # ここで新ノイズ＆新 fake を使うとカバー率が上がる
+                    noise = torch.randn(batch_size, LATENT_DIM, device=device)
+                    fake_specs = generator(noise, word_vecs)
+                    outputs = discriminator(
+                        add_instance_noise(fake_specs, 0.05), word_vecs
+                    )
+                    g_loss = criterion(outputs, real_labels)
+                    g_loss.backward()
+                    optimizer_g.step()
 
                 # learn generator
                 optimizer_g.zero_grad()
