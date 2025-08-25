@@ -29,11 +29,9 @@ def setup():
     generator = Generator().to(device)
     discriminator = Discriminator().to(device)
     criterion = nn.BCELoss()
-    optimizer_g = torch.optim.Adam(
-        generator.parameters(), lr=0.0001, betas=(0.7, 0.999)
-    )
+    optimizer_g = torch.optim.Adam(generator.parameters(), lr=2e-4, betas=(0.5, 0.999))
     optimizer_d = torch.optim.Adam(
-        discriminator.parameters(), lr=0.00001, betas=(0.7, 0.999)
+        discriminator.parameters(), lr=1e-4, betas=(0.5, 0.999)
     )
 
     return (
@@ -125,7 +123,7 @@ def run(
                 batch_size = real_specs.size(0)
 
                 # lebels: true=1, fake=0
-                real_labels = torch.ones(batch_size, 1).to(device)  # * 0.98
+                real_labels = torch.ones(batch_size, 1).to(device) * 0.98
                 fake_labels = torch.zeros(batch_size, 1).to(device)
 
                 # learn discriminator
@@ -161,10 +159,10 @@ def run(
 
                 dl += 1
 
-                # if (dl + 1) % 100 == 0:  # output every 100 batch.
-                #     print(
-                #         f"  Batch [{dl + 1}] D-Loss: {d_loss_sum / dl:.4f}, G-Loss: {g_loss_sum / dl:.4f}"
-                #     )
+                if (dl + 1) % 10 == 0:
+                    print(
+                        f"  Batch [{dl + 1}] D-Loss: {d_loss_sum / dl:.4f}, G-Loss: {g_loss_sum / dl:.4f}"
+                    )
 
             print(
                 f"Epoch [{epoch + 1}/{num_epochs}], D-Loss: {d_loss_sum / dl:.4f}, G-Loss: {g_loss_sum / dl:.4f}"
