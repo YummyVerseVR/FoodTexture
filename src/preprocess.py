@@ -11,7 +11,7 @@ from tqdm import tqdm  # Import tqdm for progress bars
 # Path to the pre-trained Word2Vec model
 WORD2VEC_MODEL_PATH = "w2v/GoogleNews-vectors-negative300.bin"
 # Directory of the raw audio dataset
-RAW_DATA_DIR = "audio/"
+RAW_DATA_DIR = "augmented_audio/"
 # Directory to save the preprocessed data
 PROCESSED_DATA_DIR = "dataset/"
 

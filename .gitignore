@@ -8,6 +8,7 @@ wheels/
 
 .direnv/
 audio/
+augmented_audio/
 w2v/
 
 # Virtual environments
