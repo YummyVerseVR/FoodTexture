@@ -23,9 +23,10 @@
             uv
           ];
           buildInputs = with pkgs; [
+            nvidia-docker
           ];
 
-          LD_LIBRARY_PATH = "${pkgs.cudaPackages.cudatoolkit}/lib:$LD_LIBRARY_PATH";
+          LD_LIBRARY_PATH = "${pkgs.cudaPackages.cudatoolkit}/lib:${pkgs.nvidia-docker}/lib:$LD_LIBRARY_PATH";
           shellHook = ''
             export XLA_FLAGS=--xla_gpu_cuda_data_dir=${pkgs.cudaPackages.cudatoolkit}
           '';

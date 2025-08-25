@@ -30,10 +30,10 @@ def setup():
     discriminator = Discriminator().to(device)
     criterion = nn.BCELoss()
     optimizer_g = torch.optim.Adam(
-        generator.parameters(), lr=0.00002, betas=(0.8, 0.999)
+        generator.parameters(), lr=0.0001, betas=(0.7, 0.999)
     )
     optimizer_d = torch.optim.Adam(
-        discriminator.parameters(), lr=0.00001, betas=(0.8, 0.999)
+        discriminator.parameters(), lr=0.00001, betas=(0.7, 0.999)
     )
 
     return (
@@ -110,7 +110,8 @@ def run(
     else:
         print("No checkpoint found. Starting training from scratch.")
 
-    num_epochs = 5000
+    # num_epochs = 5000
+    num_epochs = 1
     d_loss_list = []
     g_loss_list = []
 
