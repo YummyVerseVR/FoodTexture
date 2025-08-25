@@ -39,8 +39,12 @@ class Generator(nn.Module):
         self.model = nn.Sequential(
             # Input: LATENT_DIM (noise) + W2V_DIM (condition) -> [batch, 400, 1, 1]
             nn.ConvTranspose2d(
-                LATENT_DIM + W2V_DIM, 512, kernel_size=(5, 4), stride=1, padding=0
+                LATENT_DIM + W2V_DIM, 1024, kernel_size=(5, 4), stride=1, padding=0
             ),
+            nn.BatchNorm2d(1024),
+            nn.ReLU(True),
+            nn.Upsample(scale_factor=2, mode="nearest"),
+            nn.Conv2d(1024, 512, kernel_size=3, stride=1, padding=1),
             nn.BatchNorm2d(512),
             nn.ReLU(True),
             # State: [batch, 512, 5, 4]
@@ -60,7 +64,7 @@ class Generator(nn.Module):
             nn.ReLU(True),
             # State: [batch, 64, 40, 32]
             nn.ConvTranspose2d(
-                64, 1, kernel_size=(4, 4), stride=(2, 4), padding=(1, 0)
+                64, 1, kernel_size=(4, 4), stride=(1, 2), padding=(1, 0)
             ),
             nn.Tanh(),
             # Output: [batch, 1, 80, 128]
@@ -79,9 +83,13 @@ class Discriminator(nn.Module):
         super(Discriminator, self).__init__()
         self.spec_path = nn.Sequential(
             nn.Conv2d(1, 64, 4, 2, 1),
+            nn.BatchNorm2d(64),
             nn.LeakyReLU(0.2, inplace=True),
             nn.Conv2d(64, 128, 4, 2, 1),
             nn.BatchNorm2d(128),
+            nn.LeakyReLU(0.2, inplace=True),
+            nn.Conv2d(128, 256, 3, 1, 1),
+            nn.BatchNorm2d(256),
             nn.LeakyReLU(0.2, inplace=True),
         )
         self.w2v_path = nn.Sequential(
@@ -89,7 +97,7 @@ class Discriminator(nn.Module):
             nn.LeakyReLU(0.2, inplace=True),
         )
         self.final_path = nn.Sequential(
-            nn.Conv2d(256, 512, 4, 2, 1),
+            nn.Conv2d(384, 512, 4, 2, 1),
             nn.BatchNorm2d(512),
             nn.LeakyReLU(0.2, inplace=True),
             nn.Conv2d(512, 1, kernel_size=(10, 16), stride=1, padding=0),
