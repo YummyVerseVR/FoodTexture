@@ -20,7 +20,7 @@ def setup():
     device = torch.device("cuda")
     print(f"Using device: {device}")
 
-    PROCESSED_DATA_DIR = "dataset/"
+    PROCESSED_DATA_DIR = "augmented_dataset/"
     # Use the modified Dataset class
     dataset = PreprocessedFoodSoundDataset(PROCESSED_DATA_DIR)
     # Increase num_workers for faster data loading
@@ -47,11 +47,9 @@ def setup():
     )
 
 
-def save_checkpoint(checkpoint_data, checkpoint_folder):
-    now = datetime.datetime.now()
-    now = now.strftime("%Y:%m:%d-%H:%M:%S")
+def save_checkpoint(epoch, checkpoint_data, checkpoint_folder):
     torch.save(checkpoint_data, f"{checkpoint_folder}/latest.pth")
-    torch.save(checkpoint_data, f"{checkpoint_folder}/{now}.pth")
+    torch.save(checkpoint_data, f"{checkpoint_folder}/checkpoint-{epoch}.pth")
 
 
 def cleanup_checkpoints(checkpoint_folder, max_checkpoints=5):
@@ -110,8 +108,8 @@ def run(
     else:
         print("No checkpoint found. Starting training from scratch.")
 
-    # num_epochs = 5000
-    num_epochs = 1
+    num_epochs = 2000
+    # num_epochs = 1
     d_loss_list = []
     g_loss_list = []
 
@@ -161,14 +159,15 @@ def run(
                 d_loss_sum += d_loss.item()
                 g_loss_sum += g_loss.item()
 
-                # if (i + 1) % 50 == 0:
-                #     print(
-                #         f"  Batch [{i + 1}/{len(dataloader)}], D Loss: {d_loss_sum / (i + 1):.4f}, G Loss: {g_loss_sum / (i + 1):.4f}"
-                #     )
                 dl += 1
 
+                # if (dl + 1) % 100 == 0:  # output every 100 batch.
+                #     print(
+                #         f"  Batch [{dl + 1}] D-Loss: {d_loss_sum / dl:.4f}, G-Loss: {g_loss_sum / dl:.4f}"
+                #     )
+
             print(
-                f"Epoch [{epoch + 1}/{num_epochs}], D Loss: {d_loss_sum / dl:.4f}, G Loss: {g_loss_sum / dl:.4f}"
+                f"Epoch [{epoch + 1}/{num_epochs}], D-Loss: {d_loss_sum / dl:.4f}, G-Loss: {g_loss_sum / dl:.4f}"
             )
 
             d_loss_list.append(d_loss_sum / dl)
@@ -186,7 +185,7 @@ def run(
                     "g_loss": g_loss,
                     "d_loss": d_loss,
                 }
-                save_checkpoint(checkpoint, CHECKPOINT_FOLDER)
+                save_checkpoint(epoch + start_epoch, checkpoint, CHECKPOINT_FOLDER)
                 cleanup_checkpoints(CHECKPOINT_FOLDER, max_checkpoints=5)
         except KeyboardInterrupt:
             return generator, discriminator, d_loss_list, g_loss_list
@@ -202,8 +201,8 @@ def save_model(generator, discriminator):
     torch.save(generator.state_dict(), f"models/generator/{now}.pth")
     torch.save(discriminator.state_dict(), "models/discriminator/latest.pth")
     torch.save(discriminator.state_dict(), f"models/discriminator/{now}.pth")
-    cleanup_models("models/generator", max_models=5)
-    cleanup_models("models/discriminator", max_models=5)
+    cleanup_models("models/generator", max_models=10)
+    cleanup_models("models/discriminator", max_models=10)
     print("Models saved.")
 
 
