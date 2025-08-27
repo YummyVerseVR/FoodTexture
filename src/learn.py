@@ -20,6 +20,7 @@ def setup():
     device = torch.device("cuda")
     print(f"Using device: {device}")
 
+    # PROCESSED_DATA_DIR = "dataset/"
     PROCESSED_DATA_DIR = "augmented_dataset/"
     # Use the modified Dataset class
     dataset = PreprocessedFoodSoundDataset(PROCESSED_DATA_DIR)
@@ -29,9 +30,9 @@ def setup():
     generator = Generator().to(device)
     discriminator = Discriminator().to(device)
     criterion = nn.BCELoss()
-    optimizer_g = torch.optim.Adam(generator.parameters(), lr=2e-4, betas=(0.5, 0.999))
+    optimizer_g = torch.optim.Adam(generator.parameters(), lr=5e-5, betas=(0.9, 0.999))
     optimizer_d = torch.optim.Adam(
-        discriminator.parameters(), lr=1e-4, betas=(0.5, 0.999)
+        discriminator.parameters(), lr=1e-5, betas=(0.5, 0.999)
     )
 
     return (
@@ -113,7 +114,7 @@ def run(
     else:
         print("No checkpoint found. Starting training from scratch.")
 
-    num_epochs = 2000
+    num_epochs = 1000
     # num_epochs = 1
     d_loss_list = []
     g_loss_list = []
@@ -156,13 +157,12 @@ def run(
                 optimizer_d.step()
 
                 # Adpative training for generator
-                if d_loss.item() < 0.1:
+                if d_loss.item() < 0.60:  # ~= log2
                     optimizer_g.zero_grad()
-                    # ここで新ノイズ＆新 fake を使うとカバー率が上がる
                     noise = torch.randn(batch_size, LATENT_DIM, device=device)
                     fake_specs = generator(noise, word_vecs)
                     outputs = discriminator(
-                        add_instance_noise(fake_specs, 0.05), word_vecs
+                        add_instance_noise(fake_specs.detach(), 0.05), word_vecs
                     )
                     g_loss = criterion(outputs, real_labels)
                     g_loss.backward()
@@ -182,10 +182,10 @@ def run(
 
                 dl += 1
 
-                if (dl + 1) % 10 == 0:
-                    print(
-                        f"  Batch [{dl + 1}] D-Loss: {d_loss_sum / dl:.4f}, G-Loss: {g_loss_sum / dl:.4f}"
-                    )
+                # if (dl + 1) % 10 == 0:
+                #     print(
+                #         f"  Batch [{dl + 1}] D-Loss: {d_loss_sum / dl:.4f}, G-Loss: {g_loss_sum / dl:.4f}"
+                #     )
 
             print(
                 f"Epoch [{epoch + 1}/{num_epochs}], D-Loss: {d_loss_sum / dl:.4f}, G-Loss: {g_loss_sum / dl:.4f}"
@@ -206,7 +206,7 @@ def run(
                     "g_loss": g_loss,
                     "d_loss": d_loss,
                 }
-                save_checkpoint(epoch + start_epoch, checkpoint, CHECKPOINT_FOLDER)
+                save_checkpoint(epoch + 1 + start_epoch, checkpoint, CHECKPOINT_FOLDER)
                 cleanup_checkpoints(CHECKPOINT_FOLDER, max_checkpoints=5)
         except KeyboardInterrupt:
             return generator, discriminator, d_loss_list, g_loss_list
@@ -230,7 +230,9 @@ def save_model(generator, discriminator):
 def save_plot(d_loss_list, g_loss_list):
     plt.plot(d_loss_list)
     plt.plot(g_loss_list)
-    plt.savefig("loss.png")
+    now = datetime.datetime.now()
+    now = now.strftime("%Y:%m:%d-%H:%M:%S")
+    plt.savefig(f"loss_graph/loss-{now}.png")
 
 
 if __name__ == "__main__":
@@ -243,23 +245,15 @@ if __name__ == "__main__":
         optimizer_g,
         optimizer_d,
     ) = setup()
-    try:
-        generator, discriminator, d_loss_list, g_loss_list = run(
-            device,
-            dataloader,
-            generator,
-            discriminator,
-            optimizer_d,
-            optimizer_g,
-            criterion,
-        )
-    except KeyboardInterrupt:
-        ans = input("Save model?(y/n)")
-        if ans == "y":
-            save_model(generator, discriminator)
-            save_plot(d_loss_list, g_loss_list)
-        else:
-            pass
+    generator, discriminator, d_loss_list, g_loss_list = run(
+        device,
+        dataloader,
+        generator,
+        discriminator,
+        optimizer_d,
+        optimizer_g,
+        criterion,
+    )
 
     save_model(generator, discriminator)
     save_plot(d_loss_list, g_loss_list)
