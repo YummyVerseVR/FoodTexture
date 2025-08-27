@@ -6,9 +6,11 @@ import torch.nn as nn
 import datetime
 
 from torch.utils.data import DataLoader
-from cGAN import PreprocessedFoodSoundDataset, Generator, Discriminator, LATENT_DIM
+from cGAN import PreprocessedFoodSoundDataset, Generator, Discriminator
 
 import matplotlib.pyplot as plt
+
+from config import LATENT_DIM, PROCESSED_DATA_DIR, CHECKPOINT_FOLDER, LATEST
 
 
 def setup():
@@ -20,8 +22,6 @@ def setup():
     device = torch.device("cuda")
     print(f"Using device: {device}")
 
-    # PROCESSED_DATA_DIR = "dataset/"
-    PROCESSED_DATA_DIR = "augmented_dataset/"
     # Use the modified Dataset class
     dataset = PreprocessedFoodSoundDataset(PROCESSED_DATA_DIR)
     # Increase num_workers for faster data loading
@@ -95,8 +95,6 @@ def run(
 ) -> None:
     # --- 4. Load Checkpoint if it exists ---
     start_epoch = 0
-    CHECKPOINT_FOLDER = "models/checkpoints/"
-    LATEST = f"{CHECKPOINT_FOLDER}/latest.pth"
 
     if os.path.exists(LATEST):
         print(f"Checkpoint found at {LATEST}. Resuming training.")

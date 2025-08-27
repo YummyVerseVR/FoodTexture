@@ -10,24 +10,12 @@ from cGAN import Generator
 from preprocess import WORD2VEC_MODEL_PATH
 from learn import LATENT_DIM
 
-# --- Configuration ---
-# Path to your saved Generator model file
-GENERATOR_MODEL_PATH = "./models/generator/latest.pth"  # CHANGE THIS to your model file
-# Directory to save the output images
-OUTPUT_DIR = "./generated_images"
-# List of words to generate images for
-INPUT_WORDS = [
-    "cookie",
-    "apple",
-    "chips",
-    "water",
-    "cracker",
-    "lettuce",
-    "bacon",
-    "aloe",
-]
-# Number of images to generate per word
-NUM_IMAGES_PER_WORD = 4
+from config import (
+    GENERATOR_MODEL_PATH,
+    OUTPUT_DIR,
+    INPUT_WORDS,
+    NUM_IMAGES_PER_WORD,
+)
 
 
 def generate():

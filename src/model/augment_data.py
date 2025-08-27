@@ -2,14 +2,11 @@
 
 import os
 import soundfile as sf
-from audiomentations import Compose, AddGaussianNoise, TimeStretch, PitchShift, Shift
+from audiomentations import Compose, TimeStretch, Shift
 from tqdm import tqdm
 import numpy as np
 
-# --- Configuration ---
-INPUT_DIR = "./audio/"
-OUTPUT_DIR = "./augmented_audio/"
-AUGMENTATIONS_PER_FILE = 3
+from config import INPUT_DIR, OUTPUT_DIR, AUGMENTATIONS_PER_FILE
 
 
 def augment_data():
