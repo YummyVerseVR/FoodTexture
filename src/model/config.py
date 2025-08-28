@@ -1,17 +1,46 @@
-# Data augmentation configuration (augment_data.py)
-INPUT_DIR = "./audio/"
-OUTPUT_DIR = "./augmented_audio/"
+import os
+
+# Augmentation configuration
+AUGMENT_DATA_TARGET_DIR = "./audio/"
+AUGMENT_DATA_OUTPUT_DIR = "./augmented_audio/"
+
+# Preprocess configuration
+RAW_DATA_DIR = "audio/"
+PROCESSED_DATA_DIR = "dataset/"
+
+# Paths for saving models and data
+GENRATED_DATA_DIR = "generated/"
+GENERATED_AUDIO_DIR = os.path.join(GENRATED_DATA_DIR, "audio/")
+GENERATED_IMAGE_DIR = os.path.join(GENRATED_DATA_DIR, "image/")
+PROCESSED_DATA_DIR = "augmented_dataset/"
+WORD2VEC_MODEL_DIR = "models/word2vec"
+VOCODER_MODEL_DIR = "models/vocoder"
+CHECKPOINT_DIR = "models/checkpoints/"
+
+WORD2VEC_MODEL_URL = (
+    "http://nathaniel.iruma.arc/modelfile/GoogleNews-vectors-negative300.bin"
+)
+
+GENERATOR_MODEL_PATH = "./models/generator/latest.pth"
+LATEST_CHECKPOINT_PATH = f"{CHECKPOINT_DIR}/latest.pth"
+WORD2VEC_MODEL_PATH = os.path.join(
+    WORD2VEC_MODEL_DIR, "GoogleNews-vectors-negative300.bin"
+)
+VOCODER_MODEL_DATA_PATH = os.path.join(
+    VOCODER_MODEL_DIR, "ljspeech_parallel_wavegan.v1.tar.gz"
+)
+VOCODER_MODEL_PATH = os.path.join(
+    VOCODER_MODEL_DIR, "ljspeech_parallel_wavegan.v1/checkpoint-400000steps.pkl"
+)
+
 AUGMENTATIONS_PER_FILE = 3
+NUM_IMAGES_PER_WORD = 1
 
 # Hyperparameters for cGAN (config.py)
 W2V_DIM = 300  # Dimension of Word2Vec vectors
 LATENT_DIM = 100  # Dimension of the noise vector
 
-# Paths and settings for generator (generator.py)
-GENERATOR_MODEL_PATH = "./models/generator/latest.pth"  # CHANGE THIS to your model file
-# Directory to save the output images
-OUTPUT_DIR = "./generated_images"
-# List of words to generate images for
+# List of words to generate images and audio for
 INPUT_WORDS = [
     "cookie",
     "apple",
@@ -22,22 +51,8 @@ INPUT_WORDS = [
     "bacon",
     "aloe",
 ]
-# Number of images to generate per word
-NUM_IMAGES_PER_WORD = 1
 
-# Learing configuration (learn.py)
-PROCESSED_DATA_DIR = "augmented_dataset/"
-CHECKPOINT_FOLDER = "models/checkpoints/"
-LATEST = f"{CHECKPOINT_FOLDER}/latest.pth"
-
-# Preprocessing configuration (preprocess.py)
-# Path to the pre-trained Word2Vec model
-WORD2VEC_MODEL_PATH = "w2v/GoogleNews-vectors-negative300.bin"
-# Directory of the raw audio dataset
-RAW_DATA_DIR = "audio/"
-# Directory to save the preprocessed data
-PROCESSED_DATA_DIR = "dataset/"
-# Audio processing hyperparameters (must match the training script)
+# cGAN configuration
 SAMPLE_RATE = 22050
 N_FFT = 1024
 HOP_LENGTH = 256

@@ -10,7 +10,12 @@ from cGAN import PreprocessedFoodSoundDataset, Generator, Discriminator
 
 import matplotlib.pyplot as plt
 
-from config import LATENT_DIM, PROCESSED_DATA_DIR, CHECKPOINT_FOLDER, LATEST
+from config import (
+    LATENT_DIM,
+    PROCESSED_DATA_DIR,
+    CHECKPOINT_DIR,
+    LATEST_CHECKPOINT_PATH,
+)
 
 
 def setup():
@@ -96,9 +101,9 @@ def run(
     # --- 4. Load Checkpoint if it exists ---
     start_epoch = 0
 
-    if os.path.exists(LATEST):
-        print(f"Checkpoint found at {LATEST}. Resuming training.")
-        checkpoint = torch.load(LATEST)
+    if os.path.exists(LATEST_CHECKPOINT_PATH):
+        print(f"Checkpoint found at {LATEST_CHECKPOINT_PATH}. Resuming training.")
+        checkpoint = torch.load(LATEST_CHECKPOINT_PATH)
 
         generator.load_state_dict(checkpoint["generator_state_dict"])
         discriminator.load_state_dict(checkpoint["discriminator_state_dict"])
@@ -204,8 +209,8 @@ def run(
                     "g_loss": g_loss,
                     "d_loss": d_loss,
                 }
-                save_checkpoint(epoch + 1 + start_epoch, checkpoint, CHECKPOINT_FOLDER)
-                cleanup_checkpoints(CHECKPOINT_FOLDER, max_checkpoints=5)
+                save_checkpoint(epoch + 1 + start_epoch, checkpoint, CHECKPOINT_DIR)
+                cleanup_checkpoints(CHECKPOINT_DIR, max_checkpoints=5)
         except KeyboardInterrupt:
             return generator, discriminator, d_loss_list, g_loss_list
 
