@@ -114,7 +114,7 @@ def run(
     else:
         print("No checkpoint found. Starting training from scratch.")
 
-    num_epochs = 1000
+    num_epochs = 500
     # num_epochs = 1
     d_loss_list = []
     g_loss_list = []

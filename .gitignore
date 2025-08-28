@@ -17,3 +17,5 @@ loss_graph/
 
 *.pth
 *.out
+
+!models/generator/latest.pth
