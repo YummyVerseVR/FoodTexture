@@ -4,9 +4,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import Dataset
 
-# Hyperparameters
-W2V_DIM = 300  # Dimension of Word2Vec vectors
-LATENT_DIM = 100  # Dimension of the noise vector
+from config import W2V_DIM, LATENT_DIM
 
 
 class PreprocessedFoodSoundDataset(Dataset):

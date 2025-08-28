@@ -9,8 +9,11 @@ wheels/
 .direnv/
 audio/
 augmented_audio/
+generated/
 w2v/
 loss_graph/
+vocoder/
+word2vec/
 
 # Virtual environments
 .venv

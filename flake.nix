@@ -20,15 +20,16 @@
             ffmpeg
             cudaPackages.cudatoolkit
             nvidia-docker
+            python312Packages.pip
             uv
           ];
           buildInputs = with pkgs; [
             nvidia-docker
           ];
 
-          LD_LIBRARY_PATH = "${pkgs.cudaPackages.cudatoolkit}/lib:${pkgs.nvidia-docker}/lib:$LD_LIBRARY_PATH";
-          shellHook = ''
-            export XLA_FLAGS=--xla_gpu_cuda_data_dir=${pkgs.cudaPackages.cudatoolkit}
+          LD_LIBRARY_PATH = with pkgs; "${stdenv.cc.cc.lib}/lib:/${cudaPackages.cudatoolkit}/lib:${nvidia-docker}/lib:$LD_LIBRARY_PATH";
+          shellHook = with pkgs; ''
+            export XLA_FLAGS=--xla_gpu_cuda_data_dir=${cudaPackages.cudatoolkit}
           '';
         };
       }

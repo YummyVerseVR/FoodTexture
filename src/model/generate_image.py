@@ -10,29 +10,17 @@ from cGAN import Generator
 from preprocess import WORD2VEC_MODEL_PATH
 from learn import LATENT_DIM
 
-# --- Configuration ---
-# Path to your saved Generator model file
-GENERATOR_MODEL_PATH = "./models/generator/latest.pth"  # CHANGE THIS to your model file
-# Directory to save the output images
-OUTPUT_DIR = "./generated_images"
-# List of words to generate images for
-INPUT_WORDS = [
-    "cookie",
-    "apple",
-    "chips",
-    "water",
-    "cracker",
-    "lettuce",
-    "bacon",
-    "aloe",
-]
-# Number of images to generate per word
-NUM_IMAGES_PER_WORD = 4
+from config import (
+    GENERATOR_MODEL_PATH,
+    INPUT_WORDS,
+    NUM_IMAGES_PER_WORD,
+    GENERATED_AUDIO_DIR,
+)
 
 
 def generate():
     # Create output directory if it doesn't exist
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    os.makedirs(GENERATED_AUDIO_DIR, exist_ok=True)
 
     # --- 1. Setup Device ---
     device = torch.device("cuda")
@@ -91,7 +79,7 @@ def generate():
             fake_specs = (fake_specs + 1) / 2.0
 
             # Save the batch of images in a grid
-            save_path = os.path.join(OUTPUT_DIR, f"{word}.png")
+            save_path = os.path.join(GENERATED_AUDIO_DIR, f"{word}.png")
             save_image(fake_specs, save_path, nrow=NUM_IMAGES_PER_WORD)
 
             print(f"  - Saved images to {save_path}")

@@ -2,14 +2,11 @@
 
 import os
 import soundfile as sf
-from audiomentations import Compose, AddGaussianNoise, TimeStretch, PitchShift, Shift
+from audiomentations import Compose, TimeStretch, Shift
 from tqdm import tqdm
 import numpy as np
 
-# --- Configuration ---
-INPUT_DIR = "./audio/"
-OUTPUT_DIR = "./augmented_audio/"
-AUGMENTATIONS_PER_FILE = 3
+from config import AUGMENT_TARGET_DIR, AUGMENT_DATA_OUTPUT_DIR, AUGMENTATIONS_PER_FILE
 
 
 def augment_data():
@@ -18,8 +15,8 @@ def augment_data():
     For each audio file, it generates multiple augmented versions using
     """
     print("Starting data augmentation...")
-    print(f"input: {INPUT_DIR}")
-    print(f"output: {OUTPUT_DIR}")
+    print(f"input: {AUGMENT_TARGET_DIR}")
+    print(f"output: {AUGMENT_DATA_OUTPUT_DIR}")
     print(f"num augment: {AUGMENTATIONS_PER_FILE}")
 
     # Define the augmentation pipeline
@@ -32,14 +29,14 @@ def augment_data():
         ]
     )
 
-    for label in tqdm(os.listdir(INPUT_DIR), desc="Processing Labels"):
-        label_dir = os.path.join(INPUT_DIR, label)
+    for label in tqdm(os.listdir(AUGMENT_TARGET_DIR), desc="Processing Labels"):
+        label_dir = os.path.join(AUGMENT_TARGET_DIR, label)
 
         if not os.path.isdir(label_dir):
             continue
 
         # Create output directory for the current label
-        output_label_dir = os.path.join(OUTPUT_DIR, label)
+        output_label_dir = os.path.join(AUGMENT_DATA_OUTPUT_DIR, label)
         os.makedirs(output_label_dir, exist_ok=True)
 
         # Loop through all .wav files in the current label directory
